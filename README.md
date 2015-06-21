@@ -1,2 +1,2 @@
 # earlgrey
-Promise testing utilities built on top of Mocha and Chai
+ES6 promise testing utilities built on top of Chai

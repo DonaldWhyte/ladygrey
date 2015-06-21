@@ -1,0 +1,33 @@
+{
+  "name": "earlgrey",
+  "version": "0.0.1",
+  "description": "ES6 promise testing utilities built on top of Chai",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DonaldWhyte/earlgrey.git"
+  },
+  "keywords": [
+    "es6",
+    "promise",
+    "testing",
+    "utility",
+    "chai",
+    "mocha"
+  ],
+  "author": "Donald Whyte",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/DonaldWhyte/earlgrey/issues"
+  },
+  "homepage": "https://github.com/DonaldWhyte/earlgrey",
+  "devDependencies": {
+    "mocha": "^2.2.5"
+  },
+  "dependencies": {
+    "chai": "^3.0.0"
+  }
+}
