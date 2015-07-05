@@ -21,19 +21,6 @@ var RESULT = {
 };
 
 //=============================================================================
-// * IMPLEMENTATION
-//=============================================================================
-// If except is thrown and not caught when a promise is executed, the exception
-// is passed to the reject function. This checks if the reject function was
-// passed a JS exception and if so, it throws the exception to replicate the
-// effect within the promise.
-function throwIfError(obj) {
-    if (obj instanceof Error) {
-        throw obj;
-    }
-}
-
-//=============================================================================
 // * PromiseExceptation Class
 //
 // Used to concisely set expectations on whether promises being tested should
@@ -105,8 +92,6 @@ PromiseExpectation.prototype.run = function() {
     // performs further test verifications (e.g. verifying mock expectations,
     // object passed to callback, etc.)
     function expectedCallback(arg) {
-        throwIfError(arg);
-
         // Verify given arguments
         if (_this.expectedArg) {
             expect(arg).to.deep.equal(_this.expectedArg);
@@ -133,7 +118,6 @@ PromiseExpectation.prototype.run = function() {
         return this.promise.then(
             expectedCallback,
             function(error) {
-                throwIfError(error);
                 var message = "Unexpected rejection of promise with: '" +
                               JSON.stringify(error) + "'";
                 throw Error(message);
@@ -142,7 +126,6 @@ PromiseExpectation.prototype.run = function() {
     } else if (this.expectedResult === RESULT.REJECT) {
         return this.promise.then(
             function(result) {
-                throwIfError(result);
                 var message = "Unexpected resolution of promise with: '" +
                               JSON.stringify(result) + "'";
                 throw Error(message);
