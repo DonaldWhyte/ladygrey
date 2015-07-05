@@ -1,5 +1,5 @@
 {
-  "name": "earlgrey",
+  "name": "ladygrey",
   "version": "0.0.1",
   "description": "ES6 promise testing utilities built on top of Chai",
   "main": "index.js",
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/DonaldWhyte/earlgrey.git"
+    "url": "https://github.com/DonaldWhyte/ladygrey.git"
   },
   "keywords": [
     "es6",
@@ -21,9 +21,9 @@
   "author": "Donald Whyte",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/DonaldWhyte/earlgrey/issues"
+    "url": "https://github.com/DonaldWhyte/ladygrey/issues"
   },
-  "homepage": "https://github.com/DonaldWhyte/earlgrey",
+  "homepage": "https://github.com/DonaldWhyte/ladygrey",
   "devDependencies": {
     "jshint": "^2.8.0",
     "mocha": "^2.2.5"

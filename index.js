@@ -1,5 +1,5 @@
 /*!
- * earlgrey
+ * ladygrey
  * Copyright(c) 2015 Donald Whyte <donaldwhyte0@gmail.com>
  * MIT Licensed
  */
@@ -45,7 +45,7 @@ function throwIfError(obj) {
 //     * setting expectations on what's passed to resolve/reject function
 //     * verifying `sinon` mocks the promise used (ensuring the verification
 //       is executed *after* the promise has finished executing
-//     * verifying `earlgrey.MockPromise`s used by promise under test were
+//     * verifying `ladygrey.MockPromise`s used by promise under test were
 //       settled (called)
 //=============================================================================
 function PromiseExpectation(promise) {
