@@ -14,6 +14,7 @@ var expect = require("chai").expect;
 //=============================================================================
 // * CONSTANTS
 //=============================================================================
+// Enum for promise execution result
 var RESULT = {
     RESOLVE : 0,
     REJECT : 1
@@ -22,6 +23,10 @@ var RESULT = {
 //=============================================================================
 // * IMPLEMENTATION
 //=============================================================================
+// If except is thrown and not caught when a promise is executed, the exception
+// is passed to the reject function. This checks if the reject function was
+// passed a JS exception and if so, it throws the exception to replicate the
+// effect within the promise.
 function throwIfError(obj) {
     if (obj instanceof Error) {
         throw obj;
@@ -29,9 +34,20 @@ function throwIfError(obj) {
 }
 
 //=============================================================================
-// * API
+// * PromiseExceptation Class
+//
+// Used to concisely set expectations on whether promises being tested should
+// resolve or reject, what's passed to the resolve/reject function and verify
+// other expected side-effects after the promise has been executed.
+//
+// Supported features:
+//     * setting expectation on result of promise (resolve or reject)
+//     * setting expectations on what's passed to resolve/reject function
+//     * verifying `sinon` mocks the promise used (ensuring the verification
+//       is executed *after* the promise has finished executing
+//     * verifying `earlgrey.MockPromise`s used by promise under test were
+//       settled (called)
 //=============================================================================
-// TODO: properly document
 function PromiseExpectation(promise) {
     this.promise = promise;
     this.expectedResult = RESULT.RESOLVE; // default
@@ -65,14 +81,14 @@ PromiseExpectation.prototype.shouldRejectWith = function(arg) {
 
 PromiseExpectation.prototype.verify = function() {
     // Put all given arguments into `mocks` `Array`, assuming each arg is a
-    // mock object
+    // mock object that has a `verify()` function
     this.mocks = Array.prototype.slice.call(arguments);
     return this;
 };
 
 PromiseExpectation.prototype.shouldBeSettled = function() {
     // Put all given arguments into `promises` `Array`, assuming each arg is a
-    // mock promise
+    // mock promise that has a `settled` boolean field.
     this.promises = Array.prototype.slice.call(arguments);
     return this;
 };
@@ -85,6 +101,9 @@ PromiseExpectation.prototype.run = function() {
                         ", cannot execute again");
     }
 
+    // Callback for expected promise result (resolved or rejected), which
+    // performs further test verifications (e.g. verifying mock expectations,
+    // object passed to callback, etc.)
     function expectedCallback(arg) {
         throwIfError(arg);
 
@@ -135,6 +154,14 @@ PromiseExpectation.prototype.run = function() {
     }
 };
 
+//=============================================================================
+// * MockPromise Class
+//
+// Used to test code which uses promises that you wish to mock out. Whether the
+// promise is resolved or rejected, and what's passed to the resolve/reject
+// can be controlled to test how the user of the mock promise reacts under
+// success/failure.
+//=============================================================================
 function MockPromise() {
     this.result = RESULT.RESOLVE; // default
     this.arg = null;
