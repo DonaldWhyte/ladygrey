@@ -4,7 +4,7 @@
   "description": "ES6 promise testing utilities built on top of Chai",
   "main": "index.js",
   "scripts": {
-    "test": "mocha"
+    "test": "jshint . && mocha"
   },
   "repository": {
     "type": "git",
@@ -25,6 +25,7 @@
   },
   "homepage": "https://github.com/DonaldWhyte/earlgrey",
   "devDependencies": {
+    "jshint": "^2.8.0",
     "mocha": "^2.2.5"
   },
   "dependencies": {
