@@ -1,19 +1,36 @@
+/*!
+ * earlgrey
+ * Copyright(c) 2015 Donald Whyte <donaldwhyte0@gmail.com>
+ * MIT Licensed
+ */
+
+/*jshint expr: true*/
+
+(function () {
+"use strict";
+
 var expect = require("chai").expect;
 
-// CONSTANTS
+//=============================================================================
+// * CONSTANTS
+//=============================================================================
 var RESULT = {
     RESOLVE : 0,
     REJECT : 1
-}
+};
 
-// TODO: comment
-// PRIVATE FUNCTIONS
+//=============================================================================
+// * IMPLEMENTATION
+//=============================================================================
 function throwIfError(obj) {
     if (obj instanceof Error) {
         throw obj;
     }
 }
 
+//=============================================================================
+// * API
+//=============================================================================
 // TODO: properly document
 function PromiseExpectation(promise) {
     this.promise = promise;
@@ -64,8 +81,8 @@ PromiseExpectation.prototype.run = function() {
     var _this = this;
 
     if (_this.finished) {
-        throw new Error("PromiseExpectation: expectation already executed"
-                        + ", cannot execute again");
+        throw new Error("PromiseExpectation: expectation already executed" +
+                        ", cannot execute again");
     }
 
     function expectedCallback(arg) {
@@ -85,8 +102,8 @@ PromiseExpectation.prototype.run = function() {
 
         // Verify promises were settled
         if (_this.promises) {
-            for (var i = 0; i < _this.promises.length; i++) {
-                expect(_this.promises[i].settled).to.be.true;
+            for (var j = 0; j < _this.promises.length; j++) {
+                expect(_this.promises[j].settled).to.be.true;
             }
         }
 
@@ -98,8 +115,8 @@ PromiseExpectation.prototype.run = function() {
             expectedCallback,
             function(error) {
                 throwIfError(error);
-                var message = "Unexpected rejection of promise with: '"
-                              + JSON.stringify(error) + "'";
+                var message = "Unexpected rejection of promise with: '" +
+                              JSON.stringify(error) + "'";
                 throw Error(message);
             }
         );
@@ -107,8 +124,8 @@ PromiseExpectation.prototype.run = function() {
         return this.promise.then(
             function(result) {
                 throwIfError(result);
-                var message = "Unexpected resolution of promise with: '"
-                              + JSON.stringify(result) + "'";
+                var message = "Unexpected resolution of promise with: '" +
+                              JSON.stringify(result) + "'";
                 throw Error(message);
             },
             expectedCallback
@@ -129,18 +146,18 @@ MockPromise.prototype.resolveWith = function(arg) {
     this.result = RESULT.RESOLVE;
     this.arg = arg;
     return this;
-}
+};
 
 MockPromise.prototype.rejectWith = function(arg) {
     this.result = RESULT.REJECT;
     this.arg = arg;
     return this;
-}
+};
 
 MockPromise.prototype.then = function(resolve, reject) {
     if (this.settled) {
-        throw new Error("MockPromise: promise already settled, cannot be"
-                        + " executed again")
+        throw new Error("MockPromise: promise already settled, cannot be" +
+                        " executed again");
     }
 
     this.settled = true;
@@ -151,12 +168,15 @@ MockPromise.prototype.then = function(resolve, reject) {
     } else {
         throw new Error("MockPromise: invalid result specified");
     }
-}
+};
 
-// EXPORTS
-
+//=============================================================================
+// * EXPORTS
+//=============================================================================
 module.exports.expect = function(promise) {
     return new PromiseExpectation(promise);
-}
+};
 
 module.exports.MockPromise = MockPromise;
+
+}());
