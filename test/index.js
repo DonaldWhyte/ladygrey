@@ -32,7 +32,6 @@ describe("PromiseExpectation", function() {
         expect(expectation.promise).to.deep.equal(RESOLVE_PROMISE);
         expect(expectation.expectedResult).to.deep.equal(0);
         expect(expectation.expectedArg).to.be.undefined;
-        expect(expectation.haveExpectedArg).to.be.false;
         expect(expectation.mocks).to.be.null;
         expect(expectation.promises).to.be.null;
         expect(expectation.finished).to.be.false;
@@ -68,13 +67,35 @@ describe("PromiseExpectation", function() {
     });
 
     it("fails when wrong arguments are passed to resolve", function() {
-        // TODO
-        expect(true).to.be.false;
+        // THEN:
+        var callback = function(result) {
+            expect(result).to.be.an.instanceof(ChaiAssertionError);
+            expect(result.message).to.deep.equal(
+                "Unexpected argument passed to promise resolution: "
+                + "\"some_result\", expected: \"not_the_result_passed\"");
+        };
+
+        // WHEN:
+        return ladygrey.expect(RESOLVE_PROMISE)
+            .shouldResolveWith("not_the_result_passed")
+            .overrideErrorHandler(callback)
+            .run();
     });
 
     it("fails when wrong arguments are passed to reject", function() {
-        // TODO
-        expect(true).to.be.false;
+        // THEN:
+        var callback = function(result) {
+            expect(result).to.be.an.instanceof(ChaiAssertionError);
+            expect(result.message).to.deep.equal(
+                "Unexpected argument passed to promise rejection: "
+                + "\"some_error\", expected: \"not_the_error_passed\"");
+        };
+
+        // WHEN:
+        return ladygrey.expect(REJECT_PROMISE)
+            .shouldRejectWith("not_the_error_passed")
+            .overrideErrorHandler(callback)
+            .run();
     });
 
     it("fails when mock verification fails", function() {

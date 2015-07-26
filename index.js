@@ -39,7 +39,6 @@ function PromiseExpectation(promise) {
     this.promise = promise;
     this.expectedResult = PROMISE_RESULT.RESOLVE; // default
     this.expectedArg = undefined;
-    this.haveExpectedArg = false;
     this.mocks = null;
     this.promises = null;
     this.finished = false;
@@ -120,10 +119,23 @@ PromiseExpectation.prototype.run = function() {
             _this.throwException(arg);
         }
 
+        var noError = false;
         try {
             // Verify given arguments
-            if (_this.haveExpectedArg) {
-                chai.expect(arg).to.deep.equal(_this.expectedArg);
+            if (_this.expectedArg) {
+                if (arg !== _this.expectedArg) {
+                    var expectedResultStr =
+                        (_this.expectedResult === PROMISE_RESULT.RESOLVE)
+                        ? "resolution"
+                        : "rejection";
+
+                    var exception = new chai.AssertionError(
+                        "Unexpected argument passed to promise "
+                        + expectedResultStr
+                        + ": " + JSON.stringify(arg)
+                        + ", expected: " + JSON.stringify(_this.expectedArg));
+                    throw exception;
+                }
             }
 
             // Verify mock expectations
@@ -139,10 +151,21 @@ PromiseExpectation.prototype.run = function() {
                     chai.expect(_this.promises[j].settled).to.be.true;
                 }
             }
+
+            noError = true;
         } catch (exception) {
             if (_this.errorCallback) {
                 _this.errorCallback(exception);
             }
+        }
+
+        // If there's an error callback set, it means we expect an error.
+        // If no error occurred, then raise an assert error and fail the
+        // test. This should only really occur in ladygrey's unit tests,
+        // where the `errorCallback` property is set
+        if (noError && _this.errorCallback) {
+            chai.expect("Error not raised as expected").to.deep.equal.false;
+            chai.expect(true).to.be.false;
         }
     }
 
