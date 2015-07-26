@@ -122,7 +122,7 @@ PromiseExpectation.prototype.run = function() {
         var noError = false;
         try {
             // Verify given arguments
-            if (_this.expectedArg) {
+            if (_this.expectedArg !== undefined) {
                 if (arg !== _this.expectedArg) {
                     var expectedResultStr =
                         (_this.expectedResult === PROMISE_RESULT.RESOLVE)

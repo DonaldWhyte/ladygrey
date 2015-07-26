@@ -189,7 +189,6 @@ describe("PromiseExpectation", function() {
                                          .shouldReject();
 
         var callback = function(result) {
-            //console.error(result);
             // Ensure we received the correct error...
             expect(result).to.be.an.instanceof(ChaiAssertionError);
             expect(result.message).to.deep.equal(
@@ -210,6 +209,51 @@ describe("PromiseExpectation", function() {
                                  .run();
     });
 
-});
+    it("should not break if undefined passed to promise resolution and no expected argument was set",
+        function() {
 
-// TODO: null/undefined args with and without having expected args (4 tests)
+        // This tests that passing `undefined` to expected resolve/reject callback
+        // doesn't break anything if there are no expectations set on the arguments
+        // passed to resolution function.
+
+        // GIVEN:
+        var undefinedResolvePromise = new Promise(function(resolve, reject) {
+            resolve(undefined);
+        });
+        // WHEN/THEN:
+        return ladygrey.expect(undefinedResolvePromise)
+            .shouldResolve()
+            .run();
+    });
+
+    it("should not break if undefined passed to promise resolution and an expected argument was set",
+        function() {
+
+        // This tests that passing `undefined` to expected resolve/reject callback
+        // doesn't break anything if there are expectations set on the arguments
+        // passed to resolution function.
+
+        // THEN:
+        var callback = function(result) {
+            //console.error(result);
+            // Ensure we received the correct error...
+            expect(result).to.be.an.instanceof(ChaiAssertionError);
+            expect(result.message).to.deep.equal(
+                "Unexpected argument passed to promise resolution:"
+                + " undefined, expected: null");
+        };
+
+        // GIVEN:
+        var undefinedResolvePromise = new Promise(function(resolve, reject) {
+            resolve(undefined);
+        });
+
+        // WHEN:
+        return ladygrey.expect(undefinedResolvePromise)
+            .shouldResolveWith(null)
+            .overrideErrorHandler(callback)
+            .run();
+    });
+
+
+});
