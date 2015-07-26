@@ -1,4 +1,4 @@
-/*!
+    /*!
  * ladygrey
  * Copyright(c) 2015 Donald Whyte <donaldwhyte0@gmail.com>
  * MIT Licensed
@@ -12,8 +12,6 @@ var expect = require("chai").expect;
 var ChaiAssertionError = require("chai").AssertionError;
 
 var ladygrey = require("../index");
-
-// TODO: null/undefined args with and without having expected args (4 tests)
 
 describe("PromiseExpectation", function() {
 
@@ -99,30 +97,119 @@ describe("PromiseExpectation", function() {
     });
 
     it("fails when mock verification fails", function() {
-        // TODO
-        expect(true).to.be.false;
+        // THEN:
+        var callback = function(result) {
+            expect(result).to.be.an.instanceof(ChaiAssertionError);
+            expect(result.message).to.deep.equal("Mock not called!");
+        };
+
+        // GIVEN:
+        var mockObject = {
+            verify: function() {
+                throw new ChaiAssertionError("Mock not called!");
+            }
+        };
+
+        // WHEN:
+        return ladygrey.expect(RESOLVE_PROMISE)
+            .shouldResolveWith("some_result")
+            .verify(mockObject)
+            .overrideErrorHandler(callback)
+            .run();
     });
 
     it("fails when settled promise verification fails", function() {
-        // TODO
-        expect(true).to.be.false;
+        // THEN:
+        var callback = function(result) {
+            expect(result).to.be.an.instanceof(ChaiAssertionError);
+            expect(result.message).to.deep.equal(
+                "Promise 0 not settled");
+        };
+
+        // GIVEN:
+        var mockPromiseThatWontBeSettled = new ladygrey.MockPromise();
+
+        // WHEN:
+        return ladygrey.expect(RESOLVE_PROMISE)
+            .shouldResolveWith("some_result")
+            .shouldBeSettled(mockPromiseThatWontBeSettled)
+            .overrideErrorHandler(callback)
+            .run();
     });
 
     it("passes when all expectations are met", function() {
-        // TODO
-        expect(true).to.be.false;
+        // For this test, we don't need to override Ladygrey's error handler.
+        // Instead, we just run a standard ladygrey test that we know should
+        // pass, and no error AssertionError is raised then we know Ladygrey
+        // thinks all expectations have been yet (which it should).
+
+        // THEN:
+        var callback = function(result) {
+            expect(result).to.be.an.instanceof(ChaiAssertionError);
+            expect(result.message).to.deep.equal(
+                "Promise 0 not settled");
+        };
+
+        // GIVEN:
+        var mockObject = {
+            verify: function() {
+                // Don't throw exception to indicate mock was called and
+                // expectations were verified
+            }
+        };
+        var mockPromiseThatIsSettled = new ladygrey.MockPromise();
+        mockPromiseThatIsSettled.settled = true;
+
+        // WHEN:
+        return ladygrey.expect(RESOLVE_PROMISE)
+            .shouldResolveWith("some_result")
+            .verify(mockObject)
+            .shouldBeSettled(mockPromiseThatIsSettled)
+            .run();
     });
 
     it("throws exception when invalid expected promise result is specified",
         function() {
 
-        // TODO
-        expect(true).to.be.false;
+        var promiseExpectation = ladygrey.expect(RESOLVE_PROMISE)
+                                         .shouldReject();
+        promiseExpectation.expectedResult = 999999;
+
+        try {
+            promiseExpectation.run();
+        } catch (exception) {
+            expect(exception).to.be.an.instanceof(ChaiAssertionError);
+            expect(exception.message).to.deep.equal(
+                "PromiseExpectation has invalid expected result");
+        }
     });
 
-    it("throws exception when executed more than one", function() {
-        // TODO
-        expect(true).to.be.false;
+    it("throws exception when executed more than once", function() {
+        var promiseExpectation = ladygrey.expect(RESOLVE_PROMISE)
+                                         .shouldReject();
+
+        var callback = function(result) {
+            //console.error(result);
+            // Ensure we received the correct error...
+            expect(result).to.be.an.instanceof(ChaiAssertionError);
+            expect(result.message).to.deep.equal(
+                "Unexpected resolution of promise with: '\"some_result\"'");
+
+            // ...and execute expectation again. This should raise a
+            // "promise already settled error"
+            try {
+                promiseExpectation.run();
+            } catch (exception) {
+                expect(exception).to.be.an.instanceof(ChaiAssertionError);
+                expect(exception.message).to.deep.equal(
+                    "PromiseExpectation already executed, cannot execute again");
+            }
+        }
+
+        return promiseExpectation.overrideErrorHandler(callback)
+                                 .run();
     });
 
 });
+
+// TODO: null/undefined args with and without having expected args (4 tests)

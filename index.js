@@ -104,8 +104,8 @@ PromiseExpectation.prototype.run = function() {
     var _this = this;
 
     if (_this.finished) {
-        throw new Error("PromiseExpectation: expectation already executed" +
-                        ", cannot execute again");
+        throw new chai.AssertionError(
+            "PromiseExpectation already executed, cannot execute again");
     }
 
     // Callback for expected promise result (resolved or rejected), which;
@@ -129,12 +129,12 @@ PromiseExpectation.prototype.run = function() {
                         ? "resolution"
                         : "rejection";
 
-                    var exception = new chai.AssertionError(
+                    throw new chai.AssertionError(
                         "Unexpected argument passed to promise "
                         + expectedResultStr
                         + ": " + JSON.stringify(arg)
-                        + ", expected: " + JSON.stringify(_this.expectedArg));
-                    throw exception;
+                        + ", expected: " + JSON.stringify(_this.expectedArg)
+                    );
                 }
             }
 
@@ -148,7 +148,10 @@ PromiseExpectation.prototype.run = function() {
             // Verify promises were settled
             if (_this.promises) {
                 for (var j = 0; j < _this.promises.length; j++) {
-                    chai.expect(_this.promises[j].settled).to.be.true;
+                    if (_this.promises[j].settled !== true) {
+                        throw new chai.AssertionError(
+                            "Promise " + j + " not settled");
+                    }
                 }
             }
 
@@ -156,6 +159,9 @@ PromiseExpectation.prototype.run = function() {
         } catch (exception) {
             if (_this.errorCallback) {
                 _this.errorCallback(exception);
+            } else {
+                // If error not expected, re-throw exception
+                throw exception;
             }
         }
 
@@ -164,8 +170,8 @@ PromiseExpectation.prototype.run = function() {
         // test. This should only really occur in ladygrey's unit tests,
         // where the `errorCallback` property is set
         if (noError && _this.errorCallback) {
-            chai.expect("Error not raised as expected").to.deep.equal.false;
-            chai.expect(true).to.be.false;
+            throw new chai.AssertionError(
+                "Ladygrey never raised an error as expected");
         }
     }
 
@@ -196,7 +202,8 @@ PromiseExpectation.prototype.run = function() {
             expectedCallback
         );
     } else {
-        throw new Error("PromiseExpectation: invalid expected result");
+        throw new chai.AssertionError(
+            "PromiseExpectation has invalid expected result");
     }
 };
 
@@ -229,8 +236,8 @@ MockPromise.prototype.rejectWith = function(arg) {
 
 MockPromise.prototype.then = function(resolve, reject) {
     if (this.settled) {
-        throw new Error("MockPromise: promise already settled, cannot be" +
-                        " executed again");
+        throw new chai.AssertionError(
+            "MockPromise: promise already settled, cannot be executed again");
     }
 
     this.settled = true;
@@ -239,7 +246,7 @@ MockPromise.prototype.then = function(resolve, reject) {
     } else if (this.result === PROMISE_RESULT.REJECT) {
         reject(this.arg);
     } else {
-        throw new Error("MockPromise: invalid result specified");
+        throw new chai.AssertionError("MockPromise: invalid result specified");
     }
 };
 
