@@ -1,4 +1,4 @@
-    /*!
+/*!
  * ladygrey
  * Copyright(c) 2015 Donald Whyte <donaldwhyte0@gmail.com>
  * MIT Licensed
@@ -69,8 +69,8 @@ describe("PromiseExpectation", function() {
         var callback = function(result) {
             expect(result).to.be.an.instanceof(ChaiAssertionError);
             expect(result.message).to.deep.equal(
-                "Unexpected argument passed to promise resolution: "
-                + "\"some_result\", expected: \"not_the_result_passed\"");
+                "Unexpected argument passed to promise resolution: " +
+                "\"some_result\", expected: \"not_the_result_passed\"");
         };
 
         // WHEN:
@@ -85,8 +85,8 @@ describe("PromiseExpectation", function() {
         var callback = function(result) {
             expect(result).to.be.an.instanceof(ChaiAssertionError);
             expect(result.message).to.deep.equal(
-                "Unexpected argument passed to promise rejection: "
-                + "\"some_error\", expected: \"not_the_error_passed\"");
+                "Unexpected argument passed to promise rejection: " +
+                "\"some_error\", expected: \"not_the_error_passed\"");
         };
 
         // WHEN:
@@ -203,7 +203,7 @@ describe("PromiseExpectation", function() {
                 expect(exception.message).to.deep.equal(
                     "PromiseExpectation already executed, cannot execute again");
             }
-        }
+        };
 
         return promiseExpectation.overrideErrorHandler(callback)
                                  .run();
@@ -239,8 +239,8 @@ describe("PromiseExpectation", function() {
             // Ensure we received the correct error...
             expect(result).to.be.an.instanceof(ChaiAssertionError);
             expect(result.message).to.deep.equal(
-                "Unexpected argument passed to promise resolution:"
-                + " undefined, expected: null");
+                "Unexpected argument passed to promise resolution:" +
+                " undefined, expected: null");
         };
 
         // GIVEN:

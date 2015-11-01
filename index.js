@@ -125,15 +125,14 @@ PromiseExpectation.prototype.run = function() {
             if (_this.expectedArg !== undefined) {
                 if (arg !== _this.expectedArg) {
                     var expectedResultStr =
-                        (_this.expectedResult === PROMISE_RESULT.RESOLVE)
-                        ? "resolution"
-                        : "rejection";
+                        (_this.expectedResult === PROMISE_RESULT.RESOLVE) ?
+                            "resolution" : "rejection";
 
                     throw new chai.AssertionError(
-                        "Unexpected argument passed to promise "
-                        + expectedResultStr
-                        + ": " + JSON.stringify(arg)
-                        + ", expected: " + JSON.stringify(_this.expectedArg)
+                        "Unexpected argument passed to promise " +
+                        expectedResultStr +
+                        ": " + JSON.stringify(arg) +
+                        ", expected: " + JSON.stringify(_this.expectedArg)
                     );
                 }
             }
