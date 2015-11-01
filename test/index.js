@@ -6,7 +6,7 @@
 
 /*jshint expr: true*/
 
-var Promise = require("es6-promise").Promise;
+var Promise = require("es6-promises");
 
 var expect = require("chai").expect;
 var ChaiAssertionError = require("chai").AssertionError;
