@@ -33,7 +33,6 @@ var PROMISE_RESULT = {
 //       is executed *after* the promise has finished executing
 //     * verifying `ladygrey.MockPromise`s used by promise under test were
 //       settled (called)
-//     * TODO: callback
 //=============================================================================
 function PromiseExpectation(promise) {
     this.promise = promise;
@@ -43,7 +42,8 @@ function PromiseExpectation(promise) {
     this.promises = null;
     this.finished = false;
 
-    // TODO: comment
+    // This is purely used to *test* `PromiseExpectation` is not part of
+    // production code behaviour.
     this.errorCallback = undefined;
 
     return this;
@@ -86,13 +86,19 @@ PromiseExpectation.prototype.shouldBeSettled = function() {
 };
 
 PromiseExpectation.prototype.overrideErrorHandler = function(func) {
-    // TODO: explain
+    // This method should NEVER be used in actual test code. This is here to
+    // allow `PromiseExpectation`'s own unit tests to verify
+    // `PromiseExpectation` raises errors in tests when it should (without
+    // actually causing the to fail the test).
     this.errorCallback = func;
     return this;
 };
 
-// TODO: comment on why this is here
 PromiseExpectation.prototype.throwException = function(ex) {
+    // Only throw the given exception `ex` (e.g. one that was raised due to
+    // test assertion failure) if the error handler has not been overriden.
+    // Note that this should always throw an exception is real test code. This
+    // check is only here for `PromiseExpectation`'s own unit tests.
     if (this.errorCallback) {
         this.errorCallback(ex);
     } else {
@@ -123,17 +129,29 @@ PromiseExpectation.prototype.run = function() {
         try {
             // Verify given arguments
             if (_this.expectedArg !== undefined) {
-                if (arg !== _this.expectedArg) {
+                // Use chai to perform DEEP equality check between expeccted
+                // resolve/reject args and the real ones
+                var areEqual = true;
+                try {
+                    chai.expect(arg).deep.equal(_this.expectedArg);
+                } catch (e) {
+                    if (e instanceof chai.AssertionError) {
+                        areEqual = false;
+                    } else {
+                        throw e;
+                    }
+                }
+
+                if (!areEqual) {
                     var expectedResultStr =
-                        (_this.expectedResult === PROMISE_RESULT.RESOLVE)
-                        ? "resolution"
-                        : "rejection";
+                        (_this.expectedResult === PROMISE_RESULT.RESOLVE) ?
+                            "resolution" : "rejection";
 
                     throw new chai.AssertionError(
-                        "Unexpected argument passed to promise "
-                        + expectedResultStr
-                        + ": " + JSON.stringify(arg)
-                        + ", expected: " + JSON.stringify(_this.expectedArg)
+                        "Unexpected argument passed to promise " +
+                        expectedResultStr +
+                        ": " + JSON.stringify(arg) +
+                        ", expected: " + JSON.stringify(_this.expectedArg)
                     );
                 }
             }

@@ -4,7 +4,7 @@
   "description": "ES6 promise testing utilities built on top of Chai",
   "main": "index.js",
   "scripts": {
-    "test": "jshint . && mocha"
+    "test": "jshint . && mocha && mocha examples"
   },
   "repository": {
     "type": "git",
@@ -25,9 +25,10 @@
   },
   "homepage": "https://github.com/DonaldWhyte/ladygrey",
   "devDependencies": {
-    "es6-promise": "^2.3.0",
+    "es6-promises": "^1.0.10",
     "jshint": "^2.8.0",
     "mocha": "^2.2.5",
+    "sinon": "^1.17.2",
     "sync-promise": "^1.0.1"
   },
   "dependencies": {
