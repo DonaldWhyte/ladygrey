@@ -9,29 +9,15 @@
 (function () {
 "use strict";
 
-var expect = require("chai").expect;
+var chai = require("chai");
 
 //=============================================================================
-// * CONSTANTS
+// * PROMISE_RESULT Enumeration
 //=============================================================================
-// Enum for promise execution result
-var RESULT = {
+var PROMISE_RESULT = {
     RESOLVE : 0,
     REJECT : 1
 };
-
-//=============================================================================
-// * IMPLEMENTATION
-//=============================================================================
-// If except is thrown and not caught when a promise is executed, the exception
-// is passed to the reject function. This checks if the reject function was
-// passed a JS exception and if so, it throws the exception to replicate the
-// effect within the promise.
-function throwIfError(obj) {
-    if (obj instanceof Error) {
-        throw obj;
-    }
-}
 
 //=============================================================================
 // * PromiseExceptation Class
@@ -47,34 +33,40 @@ function throwIfError(obj) {
 //       is executed *after* the promise has finished executing
 //     * verifying `ladygrey.MockPromise`s used by promise under test were
 //       settled (called)
+//     * TODO: callback
 //=============================================================================
 function PromiseExpectation(promise) {
     this.promise = promise;
-    this.expectedResult = RESULT.RESOLVE; // default
-    this.expectedArg = null;
+    this.expectedResult = PROMISE_RESULT.RESOLVE; // default
+    this.expectedArg = undefined;
     this.mocks = null;
+    this.promises = null;
     this.finished = false;
+
+    // TODO: comment
+    this.errorCallback = undefined;
+
     return this;
 }
 
 PromiseExpectation.prototype.shouldResolve = function() {
-    this.shouldResolveWith(null);
+    this.shouldResolveWith(undefined);
     return this;
 };
 
 PromiseExpectation.prototype.shouldResolveWith = function(arg) {
-    this.expectedResult = RESULT.RESOLVE;
+    this.expectedResult = PROMISE_RESULT.RESOLVE;
     this.expectedArg = arg;
     return this;
 };
 
 PromiseExpectation.prototype.shouldReject = function() {
-    this.shouldRejectWith(null);
+    this.shouldRejectWith(undefined);
     return this;
 };
 
 PromiseExpectation.prototype.shouldRejectWith = function(arg) {
-    this.expectedResult = RESULT.REJECT;
+    this.expectedResult = PROMISE_RESULT.REJECT;
     this.expectedArg = arg;
     return this;
 };
@@ -93,64 +85,125 @@ PromiseExpectation.prototype.shouldBeSettled = function() {
     return this;
 };
 
+PromiseExpectation.prototype.overrideErrorHandler = function(func) {
+    // TODO: explain
+    this.errorCallback = func;
+    return this;
+};
+
+// TODO: comment on why this is here
+PromiseExpectation.prototype.throwException = function(ex) {
+    if (this.errorCallback) {
+        this.errorCallback(ex);
+    } else {
+        throw ex;
+    }
+};
+
 PromiseExpectation.prototype.run = function() {
     var _this = this;
 
     if (_this.finished) {
-        throw new Error("PromiseExpectation: expectation already executed" +
-                        ", cannot execute again");
+        throw new chai.AssertionError(
+            "PromiseExpectation already executed, cannot execute again");
     }
 
-    // Callback for expected promise result (resolved or rejected), which
+    // Callback for expected promise result (resolved or rejected), which;
     // performs further test verifications (e.g. verifying mock expectations,
     // object passed to callback, etc.)
     function expectedCallback(arg) {
-        throwIfError(arg);
-
-        // Verify given arguments
-        if (_this.expectedArg) {
-            expect(arg).to.deep.equal(_this.expectedArg);
-        }
-
-        // Verify mock expectations
-        if (_this.mocks) {
-            for (var i = 0; i < _this.mocks.length; i++) {
-                _this.mocks[i].verify();
-            }
-        }
-
-        // Verify promises were settled
-        if (_this.promises) {
-            for (var j = 0; j < _this.promises.length; j++) {
-                expect(_this.promises[j].settled).to.be.true;
-            }
-        }
-
         _this.finished = true;
+
+        // Throw object if a Chai assertion error was raised in the promise
+        if (arg instanceof chai.AssertionError) {
+            _this.throwException(arg);
+        }
+
+        var noError = false;
+        try {
+            // Verify given arguments
+            if (_this.expectedArg !== undefined) {
+                if (arg !== _this.expectedArg) {
+                    var expectedResultStr =
+                        (_this.expectedResult === PROMISE_RESULT.RESOLVE)
+                        ? "resolution"
+                        : "rejection";
+
+                    throw new chai.AssertionError(
+                        "Unexpected argument passed to promise "
+                        + expectedResultStr
+                        + ": " + JSON.stringify(arg)
+                        + ", expected: " + JSON.stringify(_this.expectedArg)
+                    );
+                }
+            }
+
+            // Verify mock expectations
+            if (_this.mocks) {
+                for (var i = 0; i < _this.mocks.length; i++) {
+                    _this.mocks[i].verify();
+                }
+            }
+
+            // Verify promises were settled
+            if (_this.promises) {
+                for (var j = 0; j < _this.promises.length; j++) {
+                    if (_this.promises[j].settled !== true) {
+                        throw new chai.AssertionError(
+                            "Promise " + j + " not settled");
+                    }
+                }
+            }
+
+            noError = true;
+        } catch (exception) {
+            if (_this.errorCallback) {
+                _this.errorCallback(exception);
+            } else {
+                // If error not expected, re-throw exception
+                throw exception;
+            }
+        }
+
+        // If there's an error callback set, it means we expect an error.
+        // If no error occurred, then raise an assert error and fail the
+        // test. This should only really occur in ladygrey's unit tests,
+        // where the `errorCallback` property is set
+        if (noError && _this.errorCallback) {
+            throw new chai.AssertionError(
+                "Ladygrey never raised an error as expected");
+        }
     }
 
-    if (this.expectedResult === RESULT.RESOLVE) {
+    if (this.expectedResult === PROMISE_RESULT.RESOLVE) {
         return this.promise.then(
             expectedCallback,
             function(error) {
-                throwIfError(error);
+                _this.finished = true;
+
                 var message = "Unexpected rejection of promise with: '" +
                               JSON.stringify(error) + "'";
-                throw Error(message);
+                var exception = new chai.AssertionError(message);
+
+                _this.throwException(exception);
             }
         );
-    } else if (this.expectedResult === RESULT.REJECT) {
+    } else if (this.expectedResult === PROMISE_RESULT.REJECT) {
         return this.promise.then(
             function(result) {
-                throwIfError(result);
+                _this.finished = true;
+
                 var message = "Unexpected resolution of promise with: '" +
                               JSON.stringify(result) + "'";
-                throw Error(message);
+                var exception = new chai.AssertionError(message);
+
+                _this.throwException(exception);
             },
             expectedCallback
         );
     } else {
-        throw new Error("PromiseExpectation: invalid expected result");
+        throw new chai.AssertionError(
+            "PromiseExpectation has invalid expected result");
     }
 };
 
@@ -163,37 +216,37 @@ PromiseExpectation.prototype.run = function() {
 // success/failure.
 //=============================================================================
 function MockPromise() {
-    this.result = RESULT.RESOLVE; // default
+    this.result = PROMISE_RESULT.RESOLVE; // default
     this.arg = null;
     this.settled = false;
     return this;
 }
 
 MockPromise.prototype.resolveWith = function(arg) {
-    this.result = RESULT.RESOLVE;
+    this.result = PROMISE_RESULT.RESOLVE;
     this.arg = arg;
     return this;
 };
 
 MockPromise.prototype.rejectWith = function(arg) {
-    this.result = RESULT.REJECT;
+    this.result = PROMISE_RESULT.REJECT;
     this.arg = arg;
     return this;
 };
 
 MockPromise.prototype.then = function(resolve, reject) {
     if (this.settled) {
-        throw new Error("MockPromise: promise already settled, cannot be" +
-                        " executed again");
+        throw new chai.AssertionError(
+            "MockPromise: promise already settled, cannot be executed again");
     }
 
     this.settled = true;
-    if (this.result === RESULT.RESOLVE) {
+    if (this.result === PROMISE_RESULT.RESOLVE) {
         resolve(this.arg);
-    } else if (this.result === RESULT.REJECT) {
+    } else if (this.result === PROMISE_RESULT.REJECT) {
         reject(this.arg);
     } else {
-        throw new Error("MockPromise: invalid result specified");
+        throw new chai.AssertionError("MockPromise: invalid result specified");
     }
 };
 
@@ -205,5 +258,7 @@ module.exports.expect = function(promise) {
 };
 
 module.exports.MockPromise = MockPromise;
+
+module.exports.PROMISE_RESULT = PROMISE_RESULT;
 
 }());
