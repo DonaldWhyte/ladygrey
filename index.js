@@ -129,7 +129,20 @@ PromiseExpectation.prototype.run = function() {
         try {
             // Verify given arguments
             if (_this.expectedArg !== undefined) {
-                if (arg !== _this.expectedArg) {
+                // Use chai to perform DEEP equality check between expeccted
+                // resolve/reject args and the real ones
+                var areEqual = true;
+                try {
+                    chai.expect(arg).deep.equal(_this.expectedArg);
+                } catch (e) {
+                    if (e instanceof chai.AssertionError) {
+                        areEqual = false;
+                    } else {
+                        throw e;
+                    }
+                }
+
+                if (!areEqual) {
                     var expectedResultStr =
                         (_this.expectedResult === PROMISE_RESULT.RESOLVE) ?
                             "resolution" : "rejection";
